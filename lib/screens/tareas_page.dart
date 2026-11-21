@@ -30,32 +30,71 @@ class _TareasPageState extends State<TareasPage> {
     setState(() => _tareas = tareas);
   }
 
+  Future<void> _ejecutar(Future<void> Function() accion) async {
+    try {
+      await accion();
+      await _cargar();
+    } catch (e) {
+      _mensaje('Ocurrió un error: $e');
+    }
+  }
+
   Future<void> _agregarTarea() async {
     final titulo = _tituloController.text.trim();
     if (titulo.isEmpty) {
-      _pendiente('El título no puede estar vacío');
+      _mensaje('El título no puede estar vacío');
       return;
     }
-    await widget.database.agregarTarea(titulo);
-    _tituloController.clear();
+    await _ejecutar(() async {
+      await widget.database.agregarTarea(titulo);
+      _tituloController.clear();
+    });
+  }
+
+  Future<void> _alternarCompletada(Tarea tarea, bool completada) =>
+      _ejecutar(() => widget.database.cambiarEstado(tarea.id, completada));
+
+  Future<void> _editarTarea(Tarea tarea) async {
+    var nuevo = tarea.titulo;
+    final aceptar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Editar tarea'),
+        content: TextFormField(
+          initialValue: tarea.titulo,
+          autofocus: true,
+          onChanged: (valor) => nuevo = valor,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (aceptar != true || !mounted) return;
+    nuevo = nuevo.trim();
+    if (nuevo.isEmpty) {
+      _mensaje('El título no puede estar vacío');
+      return;
+    }
+    await _ejecutar(() => widget.database.editarTitulo(tarea.id, nuevo));
+  }
+
+  Future<void> _eliminarTarea(Tarea tarea) async {
+    await widget.database.eliminarTarea(tarea.id);
     await _cargar();
   }
 
-  void _alternarCompletada(Tarea tarea, bool completada) {
-    _pendiente('Implementar actualización de tarea');
-  }
-
-  void _editarTarea(Tarea tarea) {
-    _pendiente('Implementar edición de título');
-  }
-
-  void _eliminarTarea(Tarea tarea) {
-    _pendiente('Implementar eliminación de tarea');
-  }
-
-  void _pendiente(String mensaje) {
+  void _mensaje(String texto) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje)),
+      SnackBar(content: Text(texto)),
     );
   }
 
