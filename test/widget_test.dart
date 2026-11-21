@@ -12,4 +12,12 @@ void main() {
     expect(find.text('Agregar tarea'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
   });
+
+  testWidgets('Un título vacío muestra mensaje de validación', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    await tester.pumpWidget(GestorTareasApp(database: db));
+    await tester.tap(find.text('Agregar tarea'));
+    await tester.pump();
+    expect(find.text('El título no puede estar vacío'), findsOneWidget);
+  });
 }
