@@ -127,7 +127,10 @@ class _TareasPageState extends State<TareasPage> {
               label: const Text('Agregar tarea'),
             ),
             const SizedBox(height: 12),
-            const Text('Mis tareas', style: TextStyle(fontSize: 18)),
+            Text(
+              'Mis tareas (${_tareas.where((t) => t.completada).length} de ${_tareas.length} completadas)',
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 8),
             Expanded(
               child: _tareas.isEmpty
@@ -146,7 +149,15 @@ class _TareasPageState extends State<TareasPage> {
                                 }
                               },
                             ),
-                            title: Text(tarea.titulo),
+                            title: Text(
+                              tarea.titulo,
+                              style: tarea.completada
+                                  ? const TextStyle(
+                                      decoration: TextDecoration.lineThrough,
+                                      color: Colors.grey,
+                                    )
+                                  : null,
+                            ),
                             subtitle: Text('ID: ${tarea.id}'),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
